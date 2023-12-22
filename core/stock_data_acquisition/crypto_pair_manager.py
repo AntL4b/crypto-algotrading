@@ -1,0 +1,89 @@
+import logging
+
+from core.exceptions.crypto_algotrading_exception import CryptoAlgotradingException
+from core.exchange_api.exchange_rest_api import ExchangeRestApi
+from core.stock_data_acquisition.time_frame_manager import TimeFrameManager
+
+SUPPORTED_TIME_FRAME_LENGTH = [15, 60, 300, 900, 3600, 14400, 86400]
+
+
+class CryptoPairManager(object):
+    """Crypto pair manager"""
+
+    def __init__(self, market: str, rest_api: ExchangeRestApi):
+        """
+        Crypto pair manager constructor
+
+        :param market: Name of the currency to trade with
+        :param rest_api: Instance of FtxRestApi
+        """
+        self.market = market
+        self._time_frames = {}
+        self._ftx_rest_api = rest_api
+        logging.info(f"New crypto pair manager created! Market: {self.market}")
+
+    def add_time_frame(self, time_frame_length: int, auto_compute_indicators: bool = True) -> None:
+        """
+        Add a new time frame
+
+        :param time_frame_length: The length of the time frame in seconds (15, 60, 300, 900, 3600, 14400, 86400)
+        :param auto_compute_indicators: automatically compute indicators or not
+        """
+        if time_frame_length not in SUPPORTED_TIME_FRAME_LENGTH:
+            raise CryptoAlgotradingException(
+                f"Time frame length must be one of the following: "
+                f"{', '.join([str(item) for item in SUPPORTED_TIME_FRAME_LENGTH])} ")
+
+        if time_frame_length in self._time_frames:
+            logging.warning(f"Time frame length ({time_frame_length}) is already managed for market {self.market}")
+            return
+
+        self._time_frames[time_frame_length] = TimeFrameManager(time_frame_length, self.market, self._ftx_rest_api,
+                                                                auto_compute_indicators)
+
+    def start_time_frame_acq(self, time_frame_length: int) -> None:
+        """
+        Starts the data acquisition for a given time frame
+
+        :param time_frame_length: The given time frame
+        """
+        if time_frame_length not in self._time_frames:
+            raise CryptoAlgotradingException(
+                f"Trying to start a non existing time frame {time_frame_length} for market {self.market}")
+
+        self._time_frames[time_frame_length].start()
+
+    def start_all_time_frame_acq(self) -> None:
+        """Starts the data acquisition for all time frames"""
+        for key in self._time_frames.keys():
+            self.start_time_frame_acq(key)
+
+    def stop_time_frame_acq(self, time_frame_length: int) -> None:
+        """
+        Stops the data acquisition for a given time frame
+
+        :param time_frame_length: The given time frame
+        """
+        if time_frame_length not in self._time_frames:
+            raise CryptoAlgotradingException(
+                f"Trying to stop a non existing time frame {time_frame_length} for market {self.market}")
+
+        self._time_frames[time_frame_length].stop()
+
+    def stop_all_time_frame_acq(self):
+        """Stops the data acquisition for all time frames"""
+        for key in self._time_frames.keys():
+            self.stop_time_frame_acq(key)
+
+    def get_time_frame(self, time_frame_length: int) -> TimeFrameManager:
+        """
+        Return the given time frame instance
+
+        :param time_frame_length: The given time frame
+        :return: The given time frame instance
+        """
+        if time_frame_length not in self._time_frames:
+            raise CryptoAlgotradingException(
+                f"Trying to access a non existing time frame {time_frame_length} for market {self.market}")
+
+        return self._time_frames[time_frame_length]
