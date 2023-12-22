@@ -19,7 +19,7 @@ class CryptoPairManager(object):
         """
         self.market = market
         self._time_frames = {}
-        self._ftx_rest_api = rest_api
+        self._rest_api = rest_api
         logging.info(f"New crypto pair manager created! Market: {self.market}")
 
     def add_time_frame(self, time_frame_length: int, auto_compute_indicators: bool = True) -> None:
@@ -38,7 +38,7 @@ class CryptoPairManager(object):
             logging.warning(f"Time frame length ({time_frame_length}) is already managed for market {self.market}")
             return
 
-        self._time_frames[time_frame_length] = TimeFrameManager(time_frame_length, self.market, self._ftx_rest_api,
+        self._time_frames[time_frame_length] = TimeFrameManager(time_frame_length, self.market, self._rest_api,
                                                                 auto_compute_indicators)
 
     def start_time_frame_acq(self, time_frame_length: int) -> None:

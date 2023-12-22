@@ -4,7 +4,6 @@ Rename This file in key_config.py
 """
 
 key_config = {
-    "key": "YOUR API KEY HERE",
-    "secret": "YOUR API SECRET HERE",
-    "sub_account": "YOUR SUB ACCOUNT NAME HERE"
+    "public_key": "YOUR PUBLIC KEY HERE",
+    "private_key": "YOUR PRIVATE KEY HERE",
 }

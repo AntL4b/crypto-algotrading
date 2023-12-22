@@ -51,7 +51,7 @@ class TimeFrameManager(object):
 
         if self._last_acq_size > 0:
             self.stock_data_manager.update_data(response)
-            self._last_retrieved_data_timestamp = max([math.floor(r["time"] / 1000) for r in response])
+            self._last_retrieved_data_timestamp = max([r["time"] for r in response])
 
             if TimeFrameManager.log_received_stock_data:
                 logging.info(f"Market: {self.market}, time frame: {self._time_frame_length} sec. Last received point")
@@ -69,12 +69,11 @@ class TimeFrameManager(object):
             try:
                 logging.debug(f"Market: {self.market}, time frame: {self._time_frame_length} sec. Retrieving OHLC data")
 
-                # TODO
-                return self._rest_api.get_ohlcv(f"markets/{self.market}/candles", {
-                    "resolution": self._time_frame_length,
-                    "limit": MAX_ITEM_IN_DATA_SET,
-                    "start_time": self._last_retrieved_data_timestamp + 1
-                })
+                return self._rest_api.get_ohlcv(
+                    market=self.market,
+                    time_frame=self._time_frame_length,
+                    start_time=self._last_retrieved_data_timestamp + 1
+                )
 
             except RestApiException as rest_api_ex:
                 logging.error(
